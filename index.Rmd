@@ -88,14 +88,16 @@ The histogram of the frequencq distributuion of the classes in our training data
 Now we divide the training data into a training and a validation set.
 
 ```{r}
+# set seed for reproducible random number generation
 set.seed(12345)
+# get data partitions
 partition <- createDataPartition(y=trainingData$classe, p=0.6,list=FALSE)
 trainingPartition <- trainingData[partition,]
 validationPartition  <- trainingData[-partition,]
 ```
 
 
-## Applying the Random Forest Algorithm and Cross Validation
+## Fit a Model using a Random Forest Algorithm
 
 We are using the RF implementation from the caret package and a 5-fold cross validation.
 
@@ -106,10 +108,12 @@ randomForestModel <- train(classe ~ .,data=trainingPartition,method="rf",ntree=1
 ```
 
 
-## RF sample errors
+## RF errors and Cross Validation
+
+Check the results of the model:
 
 ```{r}
-# predict
+# check model fit on training data
 randomForestModel_PredictionTraining <- predict(randomForestModel$finalModel,newdata=trainingPartition)
 # get confusion matrix
 cm <- confusionMatrix(randomForestModel_PredictionTraining,trainingPartition$classe)
@@ -117,7 +121,10 @@ print(cm)
 
 ```
 
+Now check the results when the model is applied to the validation data set:
+
 ```{r}
+# apply model on validation data set
 randomForestModel_PredictionValidation <- predict(randomForestModel$finalModel,newdata=validationPartition)
 # get confusion matrix
 cm <- confusionMatrix(randomForestModel_PredictionValidation,validationPartition$classe)
@@ -126,10 +133,14 @@ print(cm)
 ```
 
 
-## Prediction using the RF model and the testing data set
+## Prediction using the RF model
 
+Now we apply our model on the testing data set to predict the activity classes:
+ 
 ```{r}
+# apply model on testing data set
 randomForestModel_PredictionTesting <- predict(randomForestModel$finalModel,newdata=testingData)
+# show predictions
 print(randomForestModel_PredictionTesting)
 ```
 
