@@ -1,22 +1,130 @@
 ---
 title: "Human Activity Recognition"
-author: "E.Duenisch"
+author: Eli Duenisch
 date: "December 27, 2015"
 output: html_document
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### Background
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+### The Data
+
+The data for this project come from this source: [http://groupware.les.inf.puc-rio.br/har]. 
+The training data is available for download here: [https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv]
+The test data is available for download here: [https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv]
+
+### The Goal
+
+Our goal is to predict classes of human activity given data of different kind measured by fitness devices.
+
+The five classes of activity are:
+A exactly according to the specification 
+B throwing the elbows to the front
+C lifting the dumbbell only halfway
+D lowering the dumbbell only halfway
+E throwing the hips to the front
+
+The variables that contains our data to use our prediction model will be listed below after data preprocessing has been applied.
+
+### Preprocessing Data
+
+First we need to obtain the data, handle missing values, remove variables that contain too many NAs or which have a variability close to zero.
 
 ```{r}
-summary(cars)
+# loading libraries
+library(lattice)
+library(ggplot2)
+library(caret)
+
+# downloading the data
+downloadUrl <-"https://d396qusza40orc.cloudfront.net/predmachlearn/"
+trainingDataCsvFile <- "pml-training.csv"
+testingDataCsvFile <- "pml-testing.csv"
+if (!file.exists(trainingDataCsvFile)) {
+  download.file(paste(downloadUrl,trainingDataCsvFile,sep=""),destfile=trainingDataCsvFile)
+}
+if (!file.exists(testingDataCsvFile)) {
+  download.file(paste(downloadUrl,testingDataCsvFile,sep=""),destfile=testingDataCsvFile)
+}
+
+# handling missing values
+naStrings <- c("", "NA", "#DIV/0!")
+trainingData <- read.csv(trainingDataCsvFile, na.strings=naStrings, row.names=1)
+testingData <- read.csv(testingDataCsvFile, na.strings=naStrings, row.names=1)
+
+# removing the first 6 columns which contain no relevant information for our analysis
+trainingData <- trainingData[,-c(1:6)]
+testingData <- testingData[,-c(1:6)]
+
+# removing variables that conatin more than 25 percent NAs
+numberOfNAvaluesTreshold <- 0.25*dim(trainingData)[1]
+belowTresholdVariables <- apply(trainingData, 2, function(x) (sum(is.na(x))<numberOfNAvaluesTreshold))
+trainingData <- trainingData[,belowTresholdVariables]
+testingData <- testingData[,belowTresholdVariables]
+
+# removing variables that have a near zero variability as they cannot contribute to our prediction model
+nearZeroVarianceVariables <- nearZeroVar(trainingData)
+if(length(nearZeroVarianceVariables)>0){
+  trainingData <- trainingData[-nearZeroVarianceVariables]
+  testingData <- testingData[-nearZeroVarianceVariables]
+}
+
+# show the names of the remaining variables 
+print(names(trainingData))
+
+# plot the frequency distribution of the classes of activity
+plot(trainingData$classe, main="Frequency distribution of classe in training data", xlab="classe", ylab="frequency")
+
 ```
 
-You can also embed plots, for example:
+The histogram of the frequencq distributuion of the classes in our training data set shwos that there are more or less in the same range. 
 
-```{r, echo=FALSE}
-plot(cars)
+Now we divide the training data into a training and a validation set.
+
+```{r}
+set.seed(12345)
+partition <- createDataPartition(y=trainingData$classe, p=0.6,list=FALSE)
+trainingPartition <- trainingData[partition,]
+validationPartition  <- trainingData[-partition,]
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+### Applying the Random Forest Algorithm
+
+
+
+```{r}
+# training the model
+randomForestModel <- train(classe ~ .,data=trainingPartition,method="rf",ntree=10,trControl=trainControl(method = "cv", number = 5))
+
+# predict
+randomForestModel_PredictionTraining <- predict(randomForestModel$finalModel,newdata=trainingPartition)
+cm <- confusionMatrix(randomForestModel_PredictionTraining,trainingPartition$classe)
+print(cm)
+
+```
+
+```{r}
+randomForestModel_PredictionValidation <- predict(randomForestModel$finalModel,newdata=validationPartition)
+cm <- confusionMatrix(randomForestModel_PredictionValidation,validationPartition$classe)
+print(cm)
+
+```
+
+### Prediction using the RF model and the testing data set
+```{r}
+randomForestModel_PredictionTesting <- predict(randomForestModel$finalModel,newdata=testingData)
+print(randomForestModel_PredictionTesting)
+```
+
+
+### Conclusion
+
+
+
+
+
+
