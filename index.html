@@ -68,22 +68,22 @@ img {
 </div>
 
 
-<div id="background" class="section level3">
-<h3>Background</h3>
+<div id="background" class="section level2">
+<h2>Background</h2>
 <p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
 </div>
-<div id="the-data" class="section level3">
-<h3>The Data</h3>
+<div id="the-data" class="section level2">
+<h2>The Data</h2>
 <p>The data for this project come from this source: [<a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a>]. The training data is available for download here: [<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv" class="uri">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a>] The test data is available for download here: [<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv" class="uri">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a>]</p>
 </div>
-<div id="the-goal" class="section level3">
-<h3>The Goal</h3>
+<div id="the-goal" class="section level2">
+<h2>The Goal</h2>
 <p>Our goal is to predict classes of human activity given data of different kind measured by fitness devices.</p>
 <p>The five classes of activity are: A exactly according to the specification B throwing the elbows to the front C lifting the dumbbell only halfway D lowering the dumbbell only halfway E throwing the hips to the front</p>
 <p>The variables that contains our data to use our prediction model will be listed below after data preprocessing has been applied.</p>
 </div>
-<div id="preprocessing-data" class="section level3">
-<h3>Preprocessing Data</h3>
+<div id="preprocessing-data" class="section level2">
+<h2>Preprocessing Data</h2>
 <p>First we need to obtain the data, handle missing values, remove variables that contain too many NAs or which have a variability close to zero.</p>
 <pre class="r"><code># loading libraries
 library(lattice)
@@ -153,15 +153,20 @@ partition &lt;- createDataPartition(y=trainingData$classe, p=0.6,list=FALSE)
 trainingPartition &lt;- trainingData[partition,]
 validationPartition  &lt;- trainingData[-partition,]</code></pre>
 </div>
-<div id="applying-the-random-forest-algorithm" class="section level3">
-<h3>Applying the Random Forest Algorithm</h3>
+<div id="applying-the-random-forest-algorithm-and-cross-validation" class="section level2">
+<h2>Applying the Random Forest Algorithm and Cross Validation</h2>
+<p>We are using the RF implementation from the caret package and a 5-fold cross validation.</p>
 <pre class="r"><code># training the model
 randomForestModel &lt;- train(classe ~ .,data=trainingPartition,method=&quot;rf&quot;,ntree=10,trControl=trainControl(method = &quot;cv&quot;, number = 5))</code></pre>
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-12
 ## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+</div>
+<div id="rf-sample-errors" class="section level2">
+<h2>RF sample errors</h2>
 <pre class="r"><code># predict
 randomForestModel_PredictionTraining &lt;- predict(randomForestModel$finalModel,newdata=trainingPartition)
+# get confusion matrix
 cm &lt;- confusionMatrix(randomForestModel_PredictionTraining,trainingPartition$classe)
 print(cm)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
@@ -196,6 +201,7 @@ print(cm)</code></pre>
 ## Detection Prevalence   0.2845   0.1934   0.1744   0.1639   0.1838
 ## Balanced Accuracy      0.9999   0.9996   0.9991   0.9991   0.9997</code></pre>
 <pre class="r"><code>randomForestModel_PredictionValidation &lt;- predict(randomForestModel$finalModel,newdata=validationPartition)
+# get confusion matrix
 cm &lt;- confusionMatrix(randomForestModel_PredictionValidation,validationPartition$classe)
 print(cm)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
@@ -230,16 +236,17 @@ print(cm)</code></pre>
 ## Detection Prevalence   0.2854   0.1925   0.1761   0.1634   0.1826
 ## Balanced Accuracy      0.9969   0.9867   0.9848   0.9877   0.9943</code></pre>
 </div>
-<div id="prediction-using-the-rf-model-and-the-testing-data-set" class="section level3">
-<h3>Prediction using the RF model and the testing data set</h3>
+<div id="prediction-using-the-rf-model-and-the-testing-data-set" class="section level2">
+<h2>Prediction using the RF model and the testing data set</h2>
 <pre class="r"><code>randomForestModel_PredictionTesting &lt;- predict(randomForestModel$finalModel,newdata=testingData)
 print(randomForestModel_PredictionTesting)</code></pre>
 <pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
 ##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
 ## Levels: A B C D E</code></pre>
 </div>
-<div id="conclusion" class="section level3">
-<h3>Conclusion</h3>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>Using RF angorithm with the given parameters performed well enough to predict the classes in the testing data set sufficient for passing the tasks given by Coursera.</p>
 </div>
 
 
