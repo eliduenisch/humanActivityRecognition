@@ -40,6 +40,7 @@ First we need to obtain the data, handle missing values, remove variables that c
 library(lattice)
 library(ggplot2)
 library(caret)
+library(randomForest)
 
 # downloading the data
 downloadUrl <-"https://d396qusza40orc.cloudfront.net/predmachlearn/"
@@ -103,9 +104,12 @@ We are using the RF implementation from the caret package and a 5-fold cross val
 ```{r}
 # training the model
 randomForestModel <- train(classe ~ .,data=trainingPartition,method="rf",ntree=10,trControl=trainControl(method = "cv", number = 5))
+# plot the variables
+varImpPlot(randomForestModel$finalModel)
 
 ```
 
+The importance of the variables used in the final model of the RF.
 
 ## RF errors and Cross Validation
 
