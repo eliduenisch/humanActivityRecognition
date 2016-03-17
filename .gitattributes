@@ -1,0 +1,3 @@
+*.Rmd linguist-language=R
+*.Rproj linguist-language=R
+.html linguist-language=R 
